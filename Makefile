@@ -91,7 +91,7 @@ deploy-local:
 
 .NOTPARALLEL:
 dev: deploy-init deploy-css deploy-rnnoise-binary deploy-lib-jitsi-meet deploy-libflac deploy-olm
-	$(WEBPACK_DEV_SERVER) --detect-circular-deps
+	$(WEBPACK_DEV_SERVER) --detect-circular-deps --host 192.168.0.109 --port 80
 
 source-package:
 	mkdir -p source_package/jitsi-meet/css && \

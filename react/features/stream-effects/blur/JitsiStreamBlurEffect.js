@@ -18,6 +18,8 @@ export default class JitsiStreamBlurEffect {
     _bpModel: Object;
     _inputVideoElement: HTMLVideoElement;
     _inputVideoCanvasElement: HTMLCanvasElement;
+    _imageCanvasElement: HTMLCanvasElement;
+    _inputImageElement: HTMLImageElement;
     _onMaskFrameTimer: Function;
     _maskFrameTimerWorker: Worker;
     _maskInProgress: boolean;
@@ -45,6 +47,10 @@ export default class JitsiStreamBlurEffect {
         this._outputCanvasElement.getContext('2d');
         this._inputVideoElement = document.createElement('video');
         this._inputVideoCanvasElement = document.createElement('canvas');
+        this._inputImageElement = document.createElement('img');
+        this._inputImageElement.src = "https://192.168.0.109:80/images/default.jpg";
+
+        this._imageCanvasElement = document.createElement('canvas');
     }
 
     /**
@@ -80,9 +86,11 @@ export default class JitsiStreamBlurEffect {
                 this._maskInProgress = false;
             });
         }
-        const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');
+        const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
+        const imageToReplaceCtx = this._imageCanvasElement.getContext('2d');
 
         inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
+        imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0);
 
         const currentFrame = inputCanvasCtx.getImageData(
             0,
@@ -91,20 +99,36 @@ export default class JitsiStreamBlurEffect {
             this._inputVideoCanvasElement.height
         );
 
-        if (this._segmentationData) {
-            const blurData = new ImageData(currentFrame.data.slice(), currentFrame.width, currentFrame.height);
+        const imageToReplaceData = imageToReplaceCtx.getImageData(
+            0,
+            0,
+            currentFrame.width,
+            currentFrame.height
+        );
 
-            StackBlur.imageDataRGB(blurData, 0, 0, currentFrame.width, currentFrame.height, 12);
+        if (this._segmentationData) {
+           // const blurData = new ImageData(currentFrame.data.slice(), currentFrame.width, currentFrame.height);
+            
+           
+            //StackBlur.image(this._outputCanvasElement, this._inputImageElement, 0);
+            //StackBlur.imageDataRGB(blurData, 0, 0, currentFrame.width, currentFrame.height, 12);
 
             for (let x = 0; x < this._outputCanvasElement.width; x++) {
                 for (let y = 0; y < this._outputCanvasElement.height; y++) {
                     const n = (y * this._outputCanvasElement.width) + x;
 
                     if (this._segmentationData.data[n] === 0) {
-                        currentFrame.data[n * 4] = blurData.data[n * 4];
-                        currentFrame.data[(n * 4) + 1] = blurData.data[(n * 4) + 1];
-                        currentFrame.data[(n * 4) + 2] = blurData.data[(n * 4) + 2];
-                        currentFrame.data[(n * 4) + 3] = blurData.data[(n * 4) + 3];
+                        currentFrame.data[n * 4] = imageToReplaceData.data[n * 4];
+                        currentFrame.data[(n * 4) + 1] = imageToReplaceData.data[(n * 4) + 1];
+                        currentFrame.data[(n * 4) + 2] = imageToReplaceData.data[(n * 4) + 2];
+                        currentFrame.data[(n * 4) + 3] = imageToReplaceData.data[(n * 4) + 3];
+
+                        /*
+                        currentFrame.data[n * 4] = 0;
+                        currentFrame.data[(n * 4) + 1] = 0;
+                        currentFrame.data[(n * 4) + 2] = 0;
+                        currentFrame.data[(n * 4) + 3] = 0;
+                        */
                     }
                 }
             }
@@ -147,6 +171,13 @@ export default class JitsiStreamBlurEffect {
         this._inputVideoCanvasElement.height = parseInt(height, 10);
         this._inputVideoElement.width = parseInt(width, 10);
         this._inputVideoElement.height = parseInt(height, 10);
+
+        this._imageCanvasElement.width = parseInt(width, 10);
+        this._imageCanvasElement.height = parseInt(height, 10);
+        this._inputImageElement.width = parseInt(width, 10);
+        this._inputImageElement.height = parseInt(height, 10);
+
+
         this._inputVideoElement.autoplay = true;
         this._inputVideoElement.srcObject = stream;
         this._inputVideoElement.onloadeddata = () => {
