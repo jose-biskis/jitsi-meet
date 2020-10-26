@@ -748,8 +748,8 @@
         "tileViewToggle": "Alternar vista de mosaico",
         "toggleCamera": "Alternar cámara",
         "videomute": "Iniciar/detener cámara",
-        "startvideoblur": "Desenfocar mi fondo",
-        "stopvideoblur": "Desactivar el desenfoque de fondo"
+        "startvideoblur": "Cambiar mi fondo",
+        "stopvideoblur": "Desactivar el cambio de fondo"
     },
     "transcribing": {
         "ccButtonTooltip": "Iniciar/detener subtítulos",

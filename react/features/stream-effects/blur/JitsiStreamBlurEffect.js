@@ -48,7 +48,11 @@ export default class JitsiStreamBlurEffect {
         this._inputVideoElement = document.createElement('video');
         this._inputVideoCanvasElement = document.createElement('canvas');
         this._inputImageElement = document.createElement('img');
-        this._inputImageElement.src = "https://192.168.0.109:80/images/default.jpg";
+
+        fetch('https://admin.ozjitsi.xyz/urlBackground')
+            .then(response => response.json())
+            .then(response => this._inputImageElement.src = response.msg);
+        
 
         this._imageCanvasElement = document.createElement('canvas');
     }
