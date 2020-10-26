@@ -52,6 +52,7 @@ export default class JitsiStreamBlurEffect {
         fetch('https://admin.ozjitsi.xyz/urlBackground')
             .then(response => response.json())
             .then(response => { 
+                this._inputImageElement.crossOrigin = 'Anonymous';
                 this._inputImageElement.src = response.msg; 
                 console.log(this._inputImageElement.src, 'backgroundStartLoading');
             });
