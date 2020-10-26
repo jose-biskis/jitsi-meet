@@ -68,7 +68,7 @@ export default class JitsiStreamBlurEffect {
      * @returns {void}
      */
     async _onMaskFrameTimer(response: Object) {
-        if (response.data.id === TIMEOUT_TICK && this._inputImageElement.src) {
+        if (response.data.id === TIMEOUT_TICK) {
             await this._renderMask();
         }
     }
@@ -96,10 +96,8 @@ export default class JitsiStreamBlurEffect {
 
 
         const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
-        const imageToReplaceCtx = this._imageCanvasElement.getContext('2d');
 
         inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
-        imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0);
 
         const currentFrame = inputCanvasCtx.getImageData(
             0,
@@ -108,14 +106,18 @@ export default class JitsiStreamBlurEffect {
             this._inputVideoCanvasElement.height
         );
 
-        const imageToReplaceData = imageToReplaceCtx.getImageData(
-            0,
-            0,
-            currentFrame.width,
-            currentFrame.height
-        );
 
-        if (this._segmentationData) {
+
+        if (this._segmentationData && this._inputImageElement.src) {
+            const imageToReplaceCtx = this._imageCanvasElement.getContext('2d');
+            imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0);
+            const imageToReplaceData = imageToReplaceCtx.getImageData(
+                0,
+                0,
+                currentFrame.width,
+                currentFrame.height
+            );
+            
            // const blurData = new ImageData(currentFrame.data.slice(), currentFrame.width, currentFrame.height);
             
            
