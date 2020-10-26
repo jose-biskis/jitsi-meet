@@ -51,7 +51,10 @@ export default class JitsiStreamBlurEffect {
 
         fetch('https://admin.ozjitsi.xyz/urlBackground')
             .then(response => response.json())
-            .then(response => this._inputImageElement.src = response.msg);
+            .then(response => { 
+                this._inputImageElement.src = response.msg; 
+                console.log(this._inputImageElement.src, 'backgroundStartLoading');
+            });
         
 
         this._imageCanvasElement = document.createElement('canvas');
@@ -65,7 +68,7 @@ export default class JitsiStreamBlurEffect {
      * @returns {void}
      */
     async _onMaskFrameTimer(response: Object) {
-        if (response.data.id === TIMEOUT_TICK) {
+        if (response.data.id === TIMEOUT_TICK && this._inputImageElement.src) {
             await this._renderMask();
         }
     }
@@ -90,6 +93,8 @@ export default class JitsiStreamBlurEffect {
                 this._maskInProgress = false;
             });
         }
+
+
         const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
         const imageToReplaceCtx = this._imageCanvasElement.getContext('2d');
 
