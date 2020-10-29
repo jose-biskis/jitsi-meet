@@ -21,6 +21,7 @@ import { AbstractVideoMuteButton } from '../../base/toolbox/components';
 import type { AbstractButtonProps } from '../../base/toolbox/components';
 import { getLocalVideoType, isLocalVideoTrackMuted } from '../../base/tracks';
 import { toggleBlurEffect } from '../../blur';
+import { loadScript, getJitsiMeetGlobalNS } from '../../base/util';
 
 declare var APP: Object;
 
@@ -157,20 +158,44 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
         if(!videoMuted) {
             // TODO: Fix this madness
             // Find another way to activate the filter by default
-            this._customMuteVideo(false);
 
-            setTimeout(() => {
-                sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
-                this.props.dispatch(toggleBlurEffect(true));
-                console.log("BLUR VIDEO");
+            const ns = getJitsiMeetGlobalNS();
 
-                this._customMuteVideo(true);
-            }, 1000);
-
-            setTimeout(() => {
+            if (ns.effects && ns.effects.createBlurEffect) {
+                ns.effects.createBlurEffect();
                 this._customMuteVideo(false);
-            }, 1000);
 
+                setTimeout(() => {
+                    sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
+                    this.props.dispatch(toggleBlurEffect(true));
+                    console.log("BLUR VIDEO");
+    
+                    this._customMuteVideo(true);
+
+                    setTimeout(() => {
+                        this._customMuteVideo(false);
+                    }, 500);
+                }, 1000);
+    
+
+            } else {
+                loadScript('libs/video-blur-effect.min.js').then(() => {
+                    ns.effects.createBlurEffect();
+                    this._customMuteVideo(false);
+
+                    setTimeout(() => {
+                        sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
+                        this.props.dispatch(toggleBlurEffect(true));
+                        console.log("BLUR VIDEO");
+        
+                        this._customMuteVideo(true);
+
+                        setTimeout(() => {
+                            this._customMuteVideo(false);
+                        }, 500);
+                    }, 1000);
+                });
+            }
         } else {
             this._customMuteVideo(videoMuted);
         }

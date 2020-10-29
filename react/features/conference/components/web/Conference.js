@@ -23,6 +23,7 @@ import { toggleBlurEffect } from '../../../blur';
 import { createVideoBlurEvent, sendAnalytics } from '../../../analytics';
 
 */
+import { loadScript, getJitsiMeetGlobalNS } from '../../../base/util';
 import {
     AbstractConference,
     abstractMapStateToProps
@@ -248,22 +249,50 @@ class Conference extends AbstractConference<Props, *> {
      * @inheritdoc
      */
     _start() {
-        APP.UI.start();
+        const ns = getJitsiMeetGlobalNS();
 
-        APP.UI.registerListeners();
-        APP.UI.bindEvents();
+        if (ns.effects && ns.effects.createBlurEffect) {
+            ns.effects.createBlurEffect();
 
-        FULL_SCREEN_EVENTS.forEach(name =>
-            document.addEventListener(name, this._onFullScreenChange));
+            APP.UI.start();
 
-        const { dispatch, t } = this.props;
+            APP.UI.registerListeners();
+            APP.UI.bindEvents();
+    
+            FULL_SCREEN_EVENTS.forEach(name =>
+                document.addEventListener(name, this._onFullScreenChange));
+    
+            const { dispatch, t } = this.props;
+    
+            dispatch(connect());
+    
+            maybeShowSuboptimalExperienceNotification(dispatch, t);
+    
+            interfaceConfig.filmStripOnly
+                && dispatch(setToolboxAlwaysVisible(true));
+        } else {
+            loadScript('libs/video-blur-effect.min.js').then(() => {
+                ns.effects.createBlurEffect();
+                APP.UI.start();
 
-        dispatch(connect());
+                APP.UI.registerListeners();
+                APP.UI.bindEvents();
+        
+                FULL_SCREEN_EVENTS.forEach(name =>
+                    document.addEventListener(name, this._onFullScreenChange));
+        
+                const { dispatch, t } = this.props;
+        
+                dispatch(connect());
+        
+                maybeShowSuboptimalExperienceNotification(dispatch, t);
+        
+                interfaceConfig.filmStripOnly
+                    && dispatch(setToolboxAlwaysVisible(true));
+            });
+        }
 
-        maybeShowSuboptimalExperienceNotification(dispatch, t);
 
-        interfaceConfig.filmStripOnly
-            && dispatch(setToolboxAlwaysVisible(true));
 
         //Activate default background
         /*
