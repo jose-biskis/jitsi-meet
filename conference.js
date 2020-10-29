@@ -11,11 +11,13 @@ import UIUtil from './modules/UI/util/UIUtil';
 import mediaDeviceHelper from './modules/devices/mediaDeviceHelper';
 import Recorder from './modules/recorder/Recorder';
 import { createTaskQueue } from './modules/util/helpers';
+//import { toggleBlurEffect } from './react/features/blur';
 import {
     createDeviceChangedEvent,
     createStartSilentEvent,
     createScreenSharingEvent,
     createTrackMutedEvent,
+  //  createVideoBlurEvent,
     sendAnalytics
 } from './react/features/analytics';
 import {
@@ -594,7 +596,7 @@ export default {
         // overshadowed by the overlay.
         tryCreateLocalTracks.then(tracks => {
             APP.store.dispatch(mediaPermissionPromptVisibilityChanged(false));
-
+            
             return tracks;
         });
 
@@ -730,14 +732,17 @@ export default {
      * @returns {Promise}
      */
     async init({ roomName }) {
+       // muteLocalVideo(true);
+
         const initialOptions = {
             startAudioOnly: config.startAudioOnly,
             startScreenSharing: config.startScreenSharing,
             startWithAudioMuted: config.startWithAudioMuted
                 || config.startSilent
                 || isUserInteractionRequiredForUnmute(APP.store.getState()),
-            startWithVideoMuted: config.startWithVideoMuted
-                || isUserInteractionRequiredForUnmute(APP.store.getState())
+            startWithVideoMuted: true
+           /* config.startWithVideoMuted
+                || isUserInteractionRequiredForUnmute(APP.store.getState())*/
         };
 
         this.roomName = roomName;

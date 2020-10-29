@@ -132,7 +132,7 @@ export default class AbstractVideoTrack<P: Props> extends Component<P> {
      */
     _onVideoPlaying() {
         const { videoTrack } = this.props;
-
+        
         if (videoTrack && !videoTrack.videoStarted) {
             this.props.dispatch(trackVideoStarted(videoTrack.jitsiTrack));
         }

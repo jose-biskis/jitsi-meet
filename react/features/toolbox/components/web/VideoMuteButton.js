@@ -6,8 +6,7 @@ import {
     VIDEO_MUTE,
     createShortcutEvent,
     createToolbarEvent,
-    sendAnalytics,
-    createVideoBlurEvent
+    sendAnalytics
 } from '../../analytics';
 import { setAudioOnly } from '../../base/audio-only';
 import { hasAvailableDevices } from '../../base/devices';
@@ -20,7 +19,6 @@ import { connect } from '../../base/redux';
 import { AbstractVideoMuteButton } from '../../base/toolbox/components';
 import type { AbstractButtonProps } from '../../base/toolbox/components';
 import { getLocalVideoType, isLocalVideoTrackMuted } from '../../base/tracks';
-import { toggleBlurEffect } from '../../blur';
 
 declare var APP: Object;
 
@@ -154,31 +152,7 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
      * @returns {void}
      */
     _setVideoMuted(videoMuted: boolean) {
-        if(!videoMuted) {
-            // TODO: Fix this madness
-            // Find another way to activate the filter by default
-            this._customMuteVideo(false);
-
-            setTimeout(() => {
-                sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
-                this.props.dispatch(toggleBlurEffect(true));
-                console.log("BLUR VIDEO");
-
-                this._customMuteVideo(true);
-            }, 1000);
-
-            setTimeout(() => {
-                this._customMuteVideo(false);
-            }, 1000);
-
-        } else {
-            this._customMuteVideo(videoMuted);
-        }
-
-
-    }
-
-    _customMuteVideo(videoMuted: boolean) {
+        console.log('web');
         sendAnalytics(createToolbarEvent(VIDEO_MUTE, { enable: videoMuted }));
         if (this.props._audioOnly) {
             this.props.dispatch(

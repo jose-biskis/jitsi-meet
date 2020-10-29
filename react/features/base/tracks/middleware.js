@@ -4,6 +4,10 @@ import UIEvents from '../../../../service/UI/UIEvents';
 import { hideNotification } from '../../notifications';
 import { isPrejoinPageVisible } from '../../prejoin/functions';
 import { getAvailableDevices } from '../devices/actions';
+/*
+import { toggleBlurEffect } from '../../blur';
+import { createVideoBlurEvent, sendAnalytics } from '../../analytics';
+*/
 import {
     CAMERA_FACING_MODE,
     MEDIA_TYPE,
@@ -295,6 +299,14 @@ function _setMuted(store, { ensureTrack, authority, muted }, mediaType: MEDIA_TY
         // anymore, unless it is muted by audioOnly.
         jitsiTrack && (jitsiTrack.videoType !== 'desktop' || isAudioOnly)
             && setTrackMuted(jitsiTrack, muted);
+
+            /*
+        if(!muted) {
+            sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
+            store.dispatch(toggleBlurEffect(true));
+            console.log("BLUR VIDEO");
+        }*/
+
     } else if (!muted && ensureTrack && (typeof APP === 'undefined' || isPrejoinPageVisible(store.getState()))) {
         // FIXME: This only runs on mobile now because web has its own way of
         // creating local tracks. Adjust the check once they are unified.

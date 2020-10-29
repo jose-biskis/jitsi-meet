@@ -145,6 +145,18 @@ export default class JitsiStreamBlurEffect {
                 }
             }
         }
+        else {
+            for (let x = 0; x < this._outputCanvasElement.width; x++) {
+                for (let y = 0; y < this._outputCanvasElement.height; y++) {
+                    const n = (y * this._outputCanvasElement.width) + x;
+
+                    currentFrame.data[n * 4] = 0;
+                    currentFrame.data[(n * 4) + 1] = 0;
+                    currentFrame.data[(n * 4) + 2] = 0;
+                    currentFrame.data[(n * 4) + 3] = 0;
+                }
+            }        
+        }
         this._outputCanvasElement.getContext('2d').putImageData(currentFrame, 0, 0);
         this._maskFrameTimerWorker.postMessage({
             id: SET_TIMEOUT,

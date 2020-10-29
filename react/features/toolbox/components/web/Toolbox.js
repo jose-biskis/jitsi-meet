@@ -1043,10 +1043,12 @@ class Toolbox extends Component<Props, State> {
                 && <SharedDocumentButton
                     key = 'etherpad'
                     showLabel = { true } />,
+                    /*
             <VideoBlurButton
                 key = 'videobackgroundblur'
                 showLabel = { true }
                 visible = { this._shouldShowButton('videobackgroundblur') && !_screensharing } />,
+                */
             <SettingsButton
                 key = 'settings'
                 showLabel = { true }
