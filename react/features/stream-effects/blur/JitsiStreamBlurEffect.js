@@ -99,7 +99,7 @@ export default class JitsiStreamBlurEffect {
 
                 if(this._display == 'portrait') {
                     config = {
-                        internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
+                        internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
                         segmentationThreshold: 0.7, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
@@ -107,6 +107,8 @@ export default class JitsiStreamBlurEffect {
                     };
 
                     if(window.location.pathname.includes("experimentalLandscape")) {
+			            let interceptorHeight = cheight * 0.5;
+			            let interceptorWidth = cwidth * 0.5;
                         let interceptorCanvas = document.createElement('canvas');
                         let interceptorCtx = interceptorCanvas.getContext('2d');
     
@@ -117,17 +119,17 @@ export default class JitsiStreamBlurEffect {
     
                         let aspectRatio = pwidth / pheight;
     
-                        let newWidth = Math.round(cheight * aspectRatio);
+                        let newWidth = Math.round(interceptorHeight * aspectRatio);
     
                         interceptorCanvas.width = newWidth;
-                        interceptorCanvas.height = cheight;
+                        interceptorCanvas.height = interceptorHeight;
     
-                        interceptorCtx.drawImage(this._inputVideoElement, 0, 0, newWidth, cheight);
+                        interceptorCtx.drawImage(this._inputVideoElement, 0, 0, newWidth, interceptorHeight);
                 
-                        this._inputVideoCanvasElement.width = cwidth;
-                        this._inputVideoCanvasElement.height = cheight;
+                        this._inputVideoCanvasElement.width = interceptorWidth;
+                        this._inputVideoCanvasElement.height = interceptorHeight;
     
-                        let startAtX = Math.round((cwidth - newWidth) / 2);
+                        let startAtX = Math.round((interceptorWidth - newWidth) / 2);
     
                         inputCanvasCtx.drawImage(interceptorCanvas, startAtX, 0);
                 
@@ -140,10 +142,10 @@ export default class JitsiStreamBlurEffect {
                     } else {
                         inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
-                      //  this._inputVideoCanvasElement.width = cwidth;
-                      //  this._inputVideoCanvasElement.height = cheight;
+                        this._inputVideoCanvasElement.width = Math.round(cwidth * 0.5);
+                        this._inputVideoCanvasElement.height = Math.round(cheight * 0.5);
                 
-                      //  inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
+                        inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, Math.round(cwidth * 0.5), Math.round(cheight * 0.5));
                 
                         currentFrame = inputCanvasCtx.getImageData(
                             0,
@@ -157,7 +159,7 @@ export default class JitsiStreamBlurEffect {
                     config = {
                         internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
-                        segmentationThreshold: 0.8, // represents probability that a pixel belongs to a person
+                        segmentationThreshold: 0.75, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
                         scoreThreshold: 0.2
                     };
@@ -305,7 +307,7 @@ export default class JitsiStreamBlurEffect {
                 architecture: 'ResNet50',
                 outputStride: 16,
                 multiplier: 1,
-                quantBytes: 4
+                quantBytes: 1
             });
         } else {
             this._display = 'portrait';
