@@ -286,7 +286,7 @@ function _removeNoDataFromSourceNotification({ getState, dispatch }, track) {
 function _setMuted(store, { ensureTrack, authority, muted }, mediaType: MEDIA_TYPE) {
     const localTrack
         = _getLocalTrack(store, mediaType, /* includePending */ true);
-
+    
     if (localTrack) {
         // The `jitsiTrack` property will have a value only for a localTrack for
         // which `getUserMedia` has already completed. If there's no

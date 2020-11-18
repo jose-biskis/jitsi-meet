@@ -15,6 +15,12 @@ const logger = getLogger('index.web');
 const OS = Platform.OS;
 
 /**
+ * This is my first comment at vim
+ * 
+ * */
+
+
+/**
  * Renders the app when the DOM tree has been loaded.
  */
 document.addEventListener('DOMContentLoaded', () => {

@@ -26,6 +26,7 @@ import {
 } from './actionTypes';
 import { createLocalTracksF, getLocalTrack, getLocalTracks, getTrackByJitsiTrack } from './functions';
 import logger from './logger';
+import { loadScript, getJitsiMeetGlobalNS } from '../util';
 
 /**
  * Requests the creating of the desired media type tracks. Desire is expressed
@@ -393,6 +394,22 @@ export function trackAdded(track) {
         } else {
             participantId = track.getParticipantId();
             isReceivingData = true;
+        }
+
+        const ns = getJitsiMeetGlobalNS();
+        if (ns.effects && ns.effects.createBlurEffect) {
+            console.log('CARGANDO EFECTO DESPUES DE VALIDAR ACTION');
+
+            ns.effects.createBlurEffect().then(blurEffectInstance => {
+                track.setEffect(blurEffectInstance)
+            })
+        } else {
+            loadScript('libs/video-blur-effect.min.js').then(() => {
+                console.log('CARGANDO EFECTO DESPUES DE VALIDAR ACTION');
+                ns.effects.createBlurEffect().then(blurEffectInstance => {
+                    track.setEffect(blurEffectInstance)
+                })
+            });
         }
 
         return dispatch({

@@ -164,7 +164,7 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
             if (ns.effects && ns.effects.createBlurEffect) {
                 ns.effects.createBlurEffect();
                 this._customMuteVideo(false);
-
+/*
                 setTimeout(() => {
                     sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
                     this.props.dispatch(toggleBlurEffect(true));
@@ -176,13 +176,13 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
                         this._customMuteVideo(false);
                     }, 500);
                 }, 1000);
-    
+                */
 
             } else {
                 loadScript('libs/video-blur-effect.min.js').then(() => {
                     ns.effects.createBlurEffect();
                     this._customMuteVideo(false);
-
+/*
                     setTimeout(() => {
                         sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
                         this.props.dispatch(toggleBlurEffect(true));
@@ -194,6 +194,7 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
                             this._customMuteVideo(false);
                         }, 500);
                     }, 1000);
+                    */
                 });
             }
         } else {

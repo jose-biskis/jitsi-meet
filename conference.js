@@ -1689,11 +1689,11 @@ export default {
             const { width } = this.localVideo.track.getSettings();
             let desktopResizeConstraints = {};
             let resizeDesktopStream = false;
-            const DESKTOP_STREAM_CAP = 720;
+            const DESKTOP_STREAM_CAP = 360;
 
             // Determine the constraints if the desktop track needs to be resized.
             // Resizing is needed when the resolution cannot be determined or when
-            // the window is bigger than 720p.
+            // the window is bigger than 360p.
             if (height && width) {
                 aspectRatio = aspectRatio ?? (width / height).toPrecision(4);
                 const advancedConstraints = [ { aspectRatio } ];
@@ -1712,8 +1712,8 @@ export default {
             } else {
                 resizeDesktopStream = true;
                 desktopResizeConstraints = {
-                    width: 1280,
-                    height: 720
+                    width: 640,
+                    height: 360
                 };
             }
             if (resizeDesktopStream) {

@@ -9,6 +9,7 @@ import {
 
 import loadEffects from './loadEffects';
 import logger from './logger';
+import { loadScript, getJitsiMeetGlobalNS } from '../util';
 
 /**
  * Creates a local video track for presenter. The constraints are computed based
@@ -432,8 +433,27 @@ export function setTrackMuted(track, muted) {
     }
 
     const f = muted ? 'mute' : 'unmute';
+    console.log('ANTES DE PROMESA', f);
+    return track[f]().then(response => {
+        console.log('ANTES DE VALIDAR UNMUTE', f);
+        if(f == 'unmute') {
+            const ns = getJitsiMeetGlobalNS();
+            if (ns.effects && ns.effects.createBlurEffect) {
+                console.log('CARGANDO EFECTO DESPUES DE VALIDAR UNMUTE', f);
 
-    return track[f]().catch(error => {
+                ns.effects.createBlurEffect().then(blurEffectInstance => {
+                    track.setEffect(blurEffectInstance)
+                })
+            } else {
+                loadScript('libs/video-blur-effect.min.js').then(() => {
+                    console.log('CARGANDO EFECTO DESPUES DE VALIDAR UNMUTE', f);
+                    ns.effects.createBlurEffect().then(blurEffectInstance => {
+                        track.setEffect(blurEffectInstance)
+                    })
+                });
+            }
+        }
+    }).catch(error => {
         // Track might be already disposed so ignore such an error.
         if (error.name !== JitsiTrackErrors.TRACK_IS_DISPOSED) {
             // FIXME Emit mute failed, so that the app can show error dialog.
