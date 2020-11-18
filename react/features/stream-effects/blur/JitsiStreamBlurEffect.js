@@ -157,7 +157,7 @@ export default class JitsiStreamBlurEffect {
 
                 } else {
                     config = {
-                        internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
+                        internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
                         segmentationThreshold: 0.75, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
@@ -166,10 +166,10 @@ export default class JitsiStreamBlurEffect {
 
                     inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
-                    this._inputVideoCanvasElement.width = cwidth;
-                    this._inputVideoCanvasElement.height = cheight;
+                    this._inputVideoCanvasElement.width = cwidth * 0.5;
+                    this._inputVideoCanvasElement.height = cheight * 0.5;
             
-                    inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
+                    inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth * 0.5, cheight * 0.5);
             
                     currentFrame = inputCanvasCtx.getImageData(
                         0,
@@ -347,8 +347,8 @@ export default class JitsiStreamBlurEffect {
         const cheight = 360;
 
         if((!this._display || this._display == 'landscape')) { 
-            this._outputCanvasElement.width = parseInt(cwidth, 10);
-            this._outputCanvasElement.height = parseInt(cheight, 10);     
+            this._outputCanvasElement.width = parseInt(cwidth * 0.5, 10);
+            this._outputCanvasElement.height = parseInt(cheight * 0.5, 10);     
         } else {
             if(window.location.pathname.includes("experimentalLandscape")) {
                 this._outputCanvasElement.width = parseInt(cwidth * 0.5,  10);
