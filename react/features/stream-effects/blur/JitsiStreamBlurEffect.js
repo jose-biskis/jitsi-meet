@@ -86,33 +86,52 @@ export default class JitsiStreamBlurEffect {
         const cwidth = 640;
         const cheight = 360;
 
-        const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
-        inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
-
-        this._inputVideoCanvasElement.width = cwidth;
-        this._inputVideoCanvasElement.height = cheight;
-
-        inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
-
-        const currentFrame = inputCanvasCtx.getImageData(
-            0,
-            0,
-            this._inputVideoCanvasElement.width,
-            this._inputVideoCanvasElement.height
-        );
-
         if (this._bpModel && this._display && this._inputImageElement.src) {
+            const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
+            inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
+
             if(!this._maskInProgress) {
+
                 this._maskInProgress = true;
                 let config = null;
+                let currentFrame = null;
+
                 if(this._display == 'portrait') {
                     config = {
                         internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
-                        segmentationThreshold: 0.5, // represents probability that a pixel belongs to a person
+                        segmentationThreshold: 0.7, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
                         scoreThreshold: 0.2
                     };
+                    let interceptorCanvas = document.createElement('canvas');
+                    let interceptorCtx = interceptorCanvas.getContext('2d');
+
+                    let pwidth = this._inputVideoCanvasElement.width;
+                    let pheight = this._inputVideoCanvasElement.height;
+
+                    let aspectRatio = pwidth / pheight;
+
+                    let newWidth = Math.round(cheight * aspectRatio);
+
+                    interceptorCanvas.width = newWidth;
+                    interceptorCanvas.height = cheight;
+
+                    interceptorCtx.drawImage(this._inputVideoElement, 0, 0, newWidth, cheight);
+            
+                    this._inputVideoCanvasElement.width = cwidth;
+                    this._inputVideoCanvasElement.height = cheight;
+
+                    let startAtX = Math.round((cwidth - newWidth) / 2);
+
+                    inputCanvasCtx.drawImage(interceptorCanvas, startAtX, 0);
+            
+                    currentFrame = inputCanvasCtx.getImageData(
+                        0,
+                        0,
+                        this._inputVideoCanvasElement.width,
+                        this._inputVideoCanvasElement.height
+                    );
                 } else {
                     config = {
                         internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
@@ -121,6 +140,18 @@ export default class JitsiStreamBlurEffect {
                         flipHorizontal: false,
                         scoreThreshold: 0.2
                     };
+
+                    this._inputVideoCanvasElement.width = cwidth;
+                    this._inputVideoCanvasElement.height = cheight;
+            
+                    inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
+            
+                    currentFrame = inputCanvasCtx.getImageData(
+                        0,
+                        0,
+                        this._inputVideoCanvasElement.width,
+                        this._inputVideoCanvasElement.height
+                    );
                 }
     
                 this._bpModel.segmentPerson(this._inputVideoCanvasElement, config).then(data => {
@@ -209,6 +240,21 @@ export default class JitsiStreamBlurEffect {
                 });
             }
         } else {
+            const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
+            inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
+    
+            this._inputVideoCanvasElement.width = cwidth;
+            this._inputVideoCanvasElement.height = cheight;
+    
+            inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
+    
+            const currentFrame = inputCanvasCtx.getImageData(
+                0,
+                0,
+                this._inputVideoCanvasElement.width,
+                this._inputVideoCanvasElement.height
+            );
+
             for (let x = 0; x < this._outputCanvasElement.width; x++) {
                 for (let y = 0; y < this._outputCanvasElement.height; y++) {
                     const n = (y * this._outputCanvasElement.width) + x;
