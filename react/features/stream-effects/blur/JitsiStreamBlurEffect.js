@@ -20,6 +20,8 @@ import * as bodyPix from '@tensorflow-models/body-pix';
 export default class JitsiStreamBlurEffect {
     _bpModel: Object;
     _display: String;
+    _fwidth: Number;
+    _fheight: Number;
     _inputVideoElement: HTMLVideoElement;
     _inputVideoCanvasElement: HTMLCanvasElement;
     _imageCanvasElement: HTMLCanvasElement;
@@ -88,7 +90,6 @@ export default class JitsiStreamBlurEffect {
 
         if (this._bpModel && this._display && this._inputImageElement.src) {
             const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
-            inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
             if(!this._maskInProgress) {
 
@@ -104,34 +105,54 @@ export default class JitsiStreamBlurEffect {
                         flipHorizontal: false,
                         scoreThreshold: 0.2
                     };
-                    let interceptorCanvas = document.createElement('canvas');
-                    let interceptorCtx = interceptorCanvas.getContext('2d');
 
-                    let pwidth = this._inputVideoCanvasElement.width;
-                    let pheight = this._inputVideoCanvasElement.height;
+                    if(window.location.pathname.includes("experimentalLandscape")) {
+                        let interceptorCanvas = document.createElement('canvas');
+                        let interceptorCtx = interceptorCanvas.getContext('2d');
+    
+                        interceptorCtx.drawImage(this._inputVideoElement, 0, 0);
+    
+                        let pwidth = this._inputVideoCanvasElement.width;
+                        let pheight = this._inputVideoCanvasElement.height;
+    
+                        let aspectRatio = pwidth / pheight;
+    
+                        let newWidth = Math.round(cheight * aspectRatio);
+    
+                        interceptorCanvas.width = newWidth;
+                        interceptorCanvas.height = cheight;
+    
+                        interceptorCtx.drawImage(this._inputVideoElement, 0, 0, newWidth, cheight);
+                
+                        this._inputVideoCanvasElement.width = cwidth;
+                        this._inputVideoCanvasElement.height = cheight;
+    
+                        let startAtX = Math.round((cwidth - newWidth) / 2);
+    
+                        inputCanvasCtx.drawImage(interceptorCanvas, startAtX, 0);
+                
+                        currentFrame = inputCanvasCtx.getImageData(
+                            0,
+                            0,
+                            this._inputVideoCanvasElement.width,
+                            this._inputVideoCanvasElement.height
+                        );
+                    } else {
+                        inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
-                    let aspectRatio = pwidth / pheight;
+                      //  this._inputVideoCanvasElement.width = cwidth;
+                      //  this._inputVideoCanvasElement.height = cheight;
+                
+                      //  inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
+                
+                        currentFrame = inputCanvasCtx.getImageData(
+                            0,
+                            0,
+                            this._inputVideoCanvasElement.width,
+                            this._inputVideoCanvasElement.height
+                        );
+                    }
 
-                    let newWidth = Math.round(cheight * aspectRatio);
-
-                    interceptorCanvas.width = newWidth;
-                    interceptorCanvas.height = cheight;
-
-                    interceptorCtx.drawImage(this._inputVideoElement, 0, 0, newWidth, cheight);
-            
-                    this._inputVideoCanvasElement.width = cwidth;
-                    this._inputVideoCanvasElement.height = cheight;
-
-                    let startAtX = Math.round((cwidth - newWidth) / 2);
-
-                    inputCanvasCtx.drawImage(interceptorCanvas, startAtX, 0);
-            
-                    currentFrame = inputCanvasCtx.getImageData(
-                        0,
-                        0,
-                        this._inputVideoCanvasElement.width,
-                        this._inputVideoCanvasElement.height
-                    );
                 } else {
                     config = {
                         internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
@@ -140,6 +161,8 @@ export default class JitsiStreamBlurEffect {
                         flipHorizontal: false,
                         scoreThreshold: 0.2
                     };
+
+                    inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
                     this._inputVideoCanvasElement.width = cwidth;
                     this._inputVideoCanvasElement.height = cheight;
@@ -177,39 +200,7 @@ export default class JitsiStreamBlurEffect {
                        );
                        var frameWidth = currentFrame.width;
                        var frameHeight = currentFrame.height;
-                       
-                      // const blurData = new ImageData(currentFrame.data.slice(), currentFrame.width, currentFrame.height);
-                       
-                      
-                       //StackBlur.image(this._outputCanvasElement, this._inputImageElement, 0);
-                       //StackBlur.imageDataRGB(blurData, 0, 0, currentFrame.width, currentFrame.height, 12);
-           /*
-                       for (let x = 0; x < this._outputCanvasElement.width; x++) {
-                           for (let y = 0; y < this._outputCanvasElement.height; y++) {
-                               const n = (y * this._outputCanvasElement.width) + x;
-           
-                               if (this._segmentationData.data[n] === 0) {
-                                   
-                                   //currentFrame.data[n * 4] = imageToReplaceData.data[n * 4];
-                                   //currentFrame.data[(n * 4) + 1] = imageToReplaceData.data[(n * 4) + 1];
-                                   //currentFrame.data[(n * 4) + 2] = imageToReplaceData.data[(n * 4) + 2];
-                                   //currentFrame.data[(n * 4) + 3] = imageToReplaceData.data[(n * 4) + 3];
-                                   
-                                   var n4 = n * 4;
-                                   
-                                   currentFrame.data[n4] = 255;
-                                   currentFrame.data[(n4) + 1] = 255;
-                                   currentFrame.data[(n4) + 2] = 255;
-                                   currentFrame.data[(n4) + 3] = 255;
-                                   
-                                  
-                                  //var n4 = n * 4;
-                                  //currentFrame.data[n4] = 255;
-                                  
-                               }
-                           }
-                       }
-                       */
+
                       var pixel = currentFrame.data;
                       var pixelLength = pixel.length;
                       var segmentsLength = pixelLength / frameWidth;
@@ -222,17 +213,6 @@ export default class JitsiStreamBlurEffect {
                           this.drawSegment(from, to, segmentationData, pixel, imageToReplaceData.data);
                           from = to;
                       }
-                      
-           
-                    //  imageToReplaceCtx.putImageData(currentFrame)
-           
-                      /*
-                      for(let p = 0; p < pixelLength; p+=4) {
-                          if(this._segmentationData.data[p/4] === 0) {
-                               pixel[p + 3] = 0;
-                          }
-                      }
-                      */
                    }
     
                     this._outputCanvasElement.getContext('2d').imageSmoothingEnabled = true;
@@ -240,19 +220,19 @@ export default class JitsiStreamBlurEffect {
                 });
             }
         } else {
-            const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
-            inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
+            let blackCanvas = document.createElement('canvas');
+            let blackCtx = blackCanvas.getContext('2d');
+            
+            blackCanvas.width = this._outputCanvasElement.width;
+            blackCanvas.height = this._outputCanvasElement.height;
     
-            this._inputVideoCanvasElement.width = cwidth;
-            this._inputVideoCanvasElement.height = cheight;
-    
-            inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
-    
-            const currentFrame = inputCanvasCtx.getImageData(
+            blackCtx.drawImage(this._inputVideoElement, 0, 0, blackCanvas.width, blackCanvas.height);
+            
+            const currentFrame = blackCtx.getImageData(
                 0,
                 0,
-                this._inputVideoCanvasElement.width,
-                this._inputVideoCanvasElement.height
+                blackCanvas.width,
+                blackCanvas.height
             );
 
             for (let x = 0; x < this._outputCanvasElement.width; x++) {
@@ -314,6 +294,9 @@ export default class JitsiStreamBlurEffect {
     const firstVideoTrack = stream.getVideoTracks()[0];
     const { height, width, frameRate }
     = firstVideoTrack.getSettings ? firstVideoTrack.getSettings() : firstVideoTrack.getConstraints();
+    
+    this._fheight = height;
+    this._fwidth = width;
 
     if(!this._bpModel) {
         if(width > height) {
@@ -326,13 +309,23 @@ export default class JitsiStreamBlurEffect {
             });
         } else {
             this._display = 'portrait';
-            bpModel = bodyPix.load({
-                architecture: 'MobileNetV1',
-                outputStride: 8,
-                multiplier: 1,
-                quantBytes: 4,
-		//modelUrl: 'https://storage.googleapis.com/tfjs-models/savedmodel/mobilenet_v2_1.0_224/model.json'
-            });
+
+            if(window.location.pathname.includes('resnetmobile')) {
+                bpModel = bodyPix.load({
+                    architecture: 'ResNet50',
+                    outputStride: 16,
+                    multiplier: 1,
+                    quantBytes: 1
+                });
+            } else {
+                bpModel = bodyPix.load({
+                    architecture: 'MobileNetV1',
+                    outputStride: 8,
+                    multiplier: 1,
+                    quantBytes: 4,
+            //modelUrl: 'https://storage.googleapis.com/tfjs-models/savedmodel/mobilenet_v2_1.0_224/model.json'
+                });
+            }
         }
 
         bpModel
@@ -351,14 +344,24 @@ export default class JitsiStreamBlurEffect {
         const cwidth = 640;
         const cheight = 360;
 
-        this._outputCanvasElement.width = parseInt(cwidth, 10);
-        this._outputCanvasElement.height = parseInt(cheight, 10);
-        /*
-        this._inputVideoCanvasElement.width = parseInt(cwidth, 10);
-        this._inputVideoCanvasElement.height = parseInt(cheight, 10);
-        this._inputVideoElement.width = parseInt(cwidth, 10);
-        this._inputVideoElement.height = parseInt(cheight, 10);
-        */
+        if((!this._display || this._display == 'landscape')) { 
+            this._outputCanvasElement.width = parseInt(cwidth, 10);
+            this._outputCanvasElement.height = parseInt(cheight, 10);     
+        } else {
+            if(window.location.pathname.includes("experimentalLandscape")) {
+                this._outputCanvasElement.width = parseInt(cwidth, 10);
+                this._outputCanvasElement.height = parseInt(cheight, 10); 
+            } else {
+                this._outputCanvasElement.width = parseInt(this._fwidth, 10);
+                this._outputCanvasElement.height = parseInt(this._fheight, 10); 
+            }   
+        }
+    
+        this._inputVideoCanvasElement.width = parseInt(this._fwidth, 10);
+        this._inputVideoCanvasElement.height = parseInt(this._fheight, 10);
+        this._inputVideoElement.width = parseInt(this._fwidth, 10);
+        this._inputVideoElement.height = parseInt(this._fheight, 10);
+       
 
         /*
         this._imageCanvasElement.width = parseInt(width, 10);
