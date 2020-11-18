@@ -304,10 +304,10 @@ export default class JitsiStreamBlurEffect {
         if(width > height) {
             this._display = 'landscape';
             bpModel = bodyPix.load({
-                architecture: 'ResNet50',
-                outputStride: 16,
+                architecture: 'MobileNetV1',
+                outputStride: 8,
                 multiplier: 1,
-                quantBytes: 1
+                quantBytes: 4
             });
         } else {
             this._display = 'portrait';
