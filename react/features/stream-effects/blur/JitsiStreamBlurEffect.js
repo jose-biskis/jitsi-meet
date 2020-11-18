@@ -142,10 +142,10 @@ export default class JitsiStreamBlurEffect {
                     } else {
                         inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
-                        this._inputVideoCanvasElement.width = Math.round(cwidth * 0.5);
-                        this._inputVideoCanvasElement.height = Math.round(cheight * 0.5);
+                        this._inputVideoCanvasElement.width = Math.round(this._fwidth * 0.5);
+                        this._inputVideoCanvasElement.height = Math.round(this._fheight * 0.5);
                 
-                        inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, Math.round(cwidth * 0.5), Math.round(cheight * 0.5));
+                        inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, Math.round(this._fwidth * 0.5), Math.round(this._fwidth * 0.5));
                 
                         currentFrame = inputCanvasCtx.getImageData(
                             0,
@@ -351,18 +351,18 @@ export default class JitsiStreamBlurEffect {
             this._outputCanvasElement.height = parseInt(cheight, 10);     
         } else {
             if(window.location.pathname.includes("experimentalLandscape")) {
-                this._outputCanvasElement.width = parseInt(cwidth, 10);
-                this._outputCanvasElement.height = parseInt(cheight, 10); 
+                this._outputCanvasElement.width = parseInt(cwidth * 0.5,  10);
+                this._outputCanvasElement.height = parseInt(cheight * 0.5, 10); 
             } else {
-                this._outputCanvasElement.width = parseInt(this._fwidth, 10);
-                this._outputCanvasElement.height = parseInt(this._fheight, 10); 
+                this._outputCanvasElement.width = parseInt(Math.round(this._fwidth * 0.5), 10);
+                this._outputCanvasElement.height = parseInt(Math.round(this._fheight * 0.5), 10); 
             }   
         }
     
-        this._inputVideoCanvasElement.width = parseInt(this._fwidth, 10);
-        this._inputVideoCanvasElement.height = parseInt(this._fheight, 10);
-        this._inputVideoElement.width = parseInt(this._fwidth, 10);
-        this._inputVideoElement.height = parseInt(this._fheight, 10);
+        this._inputVideoCanvasElement.width = parseInt(Math.round(this._fwidth), 10);
+        this._inputVideoCanvasElement.height = parseInt(Math.round(this._fheight), 10);
+        this._inputVideoElement.width = parseInt(Math.round(this._fwidth), 10);
+        this._inputVideoElement.height = parseInt(Math.round(this._fheight), 10);
        
 
         /*
