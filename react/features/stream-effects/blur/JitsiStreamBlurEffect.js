@@ -157,7 +157,7 @@ export default class JitsiStreamBlurEffect {
 
                 } else {
                     config = {
-                        internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
+                        internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
                         segmentationThreshold: 0.75, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
