@@ -256,7 +256,7 @@ export default class JitsiStreamBlurEffect {
 
         this._maskFrameTimerWorker.postMessage({
             id: SET_TIMEOUT,
-            timeMs: 1000 / 1
+            timeMs: 1000 / 60
         });
     }
 
@@ -413,7 +413,7 @@ export default class JitsiStreamBlurEffect {
         this._inputVideoElement.onloadeddata = () => {
             this._maskFrameTimerWorker.postMessage({
                 id: SET_TIMEOUT,
-                timeMs: 1000 / 1
+                timeMs: 1000 / 60
             });
         };
 
