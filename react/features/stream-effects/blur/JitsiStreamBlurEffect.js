@@ -281,7 +281,7 @@ export default class JitsiStreamBlurEffect {
                     });
                 } else {
                     this._modelConfig = {
-                        internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
+                        internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
                         segmentationThreshold: 0.8, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
@@ -290,8 +290,8 @@ export default class JitsiStreamBlurEffect {
                     
                     bpModel = bodyPix.load({
                         architecture: 'MobileNetV1',
-                        outputStride: 8,
-                        multiplier: 1,
+                        outputStride: 16,
+                        multiplier: 0.75,
                         quantBytes: 4
                     });
                 }
@@ -330,20 +330,20 @@ export default class JitsiStreamBlurEffect {
                         quantBytes: 2
                     });
                 } else {
-                    bpModel = bodyPix.load({
-                        architecture: 'MobileNetV1',
-                        outputStride: 8,
-                        multiplier: 1,
-                        quantBytes: 4
-                    });
-
                     this._modelConfig = {
                         internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
                         maxDetections: 1, // max. number of person poses to detect per image
-                        segmentationThreshold: 0.7, // represents probability that a pixel belongs to a person
+                        segmentationThreshold: 0.8, // represents probability that a pixel belongs to a person
                         flipHorizontal: false,
                         scoreThreshold: 0.2
-                    };                    
+                    };  
+                    
+                    bpModel = bodyPix.load({
+                        architecture: 'MobileNetV1',
+                        outputStride: 16,
+                        multiplier: 0.75,
+                        quantBytes: 4
+                    });                    
                 }
 
                 this._display = 'portrait';
