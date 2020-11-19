@@ -6,8 +6,7 @@ import {
     VIDEO_MUTE,
     createShortcutEvent,
     createToolbarEvent,
-    sendAnalytics,
-    createVideoBlurEvent
+    sendAnalytics
 } from '../../analytics';
 import { setAudioOnly } from '../../base/audio-only';
 import { hasAvailableDevices } from '../../base/devices';
@@ -20,7 +19,6 @@ import { connect } from '../../base/redux';
 import { AbstractVideoMuteButton } from '../../base/toolbox/components';
 import type { AbstractButtonProps } from '../../base/toolbox/components';
 import { getLocalVideoType, isLocalVideoTrackMuted } from '../../base/tracks';
-import { toggleBlurEffect } from '../../blur';
 import { loadScript, getJitsiMeetGlobalNS } from '../../base/util';
 
 declare var APP: Object;
@@ -164,37 +162,11 @@ class VideoMuteButton extends AbstractVideoMuteButton<Props, *> {
             if (ns.effects && ns.effects.createBlurEffect) {
                 ns.effects.createBlurEffect();
                 this._customMuteVideo(false);
-/*
-                setTimeout(() => {
-                    sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
-                    this.props.dispatch(toggleBlurEffect(true));
-                    console.log("BLUR VIDEO");
-    
-                    this._customMuteVideo(true);
-
-                    setTimeout(() => {
-                        this._customMuteVideo(false);
-                    }, 500);
-                }, 1000);
-                */
 
             } else {
                 loadScript('libs/video-blur-effect.min.js').then(() => {
                     ns.effects.createBlurEffect();
                     this._customMuteVideo(false);
-/*
-                    setTimeout(() => {
-                        sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
-                        this.props.dispatch(toggleBlurEffect(true));
-                        console.log("BLUR VIDEO");
-        
-                        this._customMuteVideo(true);
-
-                        setTimeout(() => {
-                            this._customMuteVideo(false);
-                        }, 500);
-                    }, 1000);
-                    */
                 });
             }
         } else {

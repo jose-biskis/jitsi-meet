@@ -96,9 +96,9 @@ export default class JitsiStreamBlurEffect {
      */
     async _renderMask() {
         if (this._bpModel && this._display && this._isImageReady && this._imageToReplaceData) {
-          //  if(!this._maskInProgress) {
+            if(!this._maskInProgress) {
 
-              //  this._maskInProgress = true;
+                this._maskInProgress = true;
                 let currentFrame = null;
 
                 if(this._display == 'portrait') {
@@ -160,11 +160,11 @@ export default class JitsiStreamBlurEffect {
 
                     this._outputCanvasCtx.putImageData(currentFrame, 0, 0);
                 });
-           // }
+            }
         } else {
             this._blackCtx.drawImage(this._inputVideoElement, 0, 0, this._outputCanvasElement.width, this._outputCanvasElement.height);
             
-            const currentFrame = blackCtx.getImageData(
+            const currentFrame = this._blackCtx.getImageData(
                 0,
                 0,
                 this._blackCanvas.width,
@@ -226,7 +226,7 @@ export default class JitsiStreamBlurEffect {
         
         this._maskFrameTimerWorker = new Worker(timerWorkerScript, { name: 'Blur effect worker' });
         this._maskFrameTimerWorker.onmessage = this._onMaskFrameTimer;
-        
+
         let bpModel = null;
 
         const firstVideoTrack = stream.getVideoTracks()[0];
@@ -371,7 +371,7 @@ export default class JitsiStreamBlurEffect {
             this._blackCanvas.width = this._outputCanvasElement.width;
             this._blackCanvas.height = this._outputCanvasElement.height;
 
-            this._interceptorHeight = this._outputCansElement.height;
+            this._interceptorHeight = this._outputCanvasElement.height;
             this._interceptorWidth = this._outputCanvasElement.width;
     
             this._interceptorCanvas.width = (this._interceptorHeight * this._aspectRatio) << 0;

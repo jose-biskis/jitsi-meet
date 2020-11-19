@@ -18,11 +18,6 @@ import { fullScreenChanged, setToolboxAlwaysVisible, showToolbox } from '../../.
 import { Toolbox } from '../../../toolbox/components/web';
 import { LAYOUTS, getCurrentLayout } from '../../../video-layout';
 import { maybeShowSuboptimalExperienceNotification } from '../../functions';
-/*
-import { toggleBlurEffect } from '../../../blur';
-import { createVideoBlurEvent, sendAnalytics } from '../../../analytics';
-
-*/
 import { loadScript, getJitsiMeetGlobalNS } from '../../../base/util';
 import {
     AbstractConference,
@@ -291,24 +286,6 @@ class Conference extends AbstractConference<Props, *> {
                     && dispatch(setToolboxAlwaysVisible(true));
             });
         }
-
-
-
-        //Activate default background
-        /*
-        setTimeout(() => {
-            sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
-            dispatch(toggleBlurEffect(true));
-            console.log("BLUR VIDEO");
-        }, 10000);
-        */
-        
-        
-        /*
-        sendAnalytics(createVideoBlurEvent(true ? 'started' : 'stopped'));
-        dispatch(toggleBlurEffect(true));
-        console.log("BLUR VIDEO");
-        */
         
     }
 }
