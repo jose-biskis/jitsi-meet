@@ -223,7 +223,10 @@ export default class JitsiStreamBlurEffect {
     startEffect(stream: MediaStream) {
         // An output stride of 16 and a multiplier of 0.5 are used for improved
         // performance on a larger range of CPUs.
-
+        
+        this._maskFrameTimerWorker = new Worker(timerWorkerScript, { name: 'Blur effect worker' });
+        this._maskFrameTimerWorker.onmessage = this._onMaskFrameTimer;
+        
         let bpModel = null;
 
         const firstVideoTrack = stream.getVideoTracks()[0];
@@ -410,17 +413,6 @@ export default class JitsiStreamBlurEffect {
                 this._bpModel = model;
             });
         }
-        
-        this._maskFrameTimerWorker = new Worker(timerWorkerScript, { name: 'Blur effect worker' });
-        this._maskFrameTimerWorker.onmessage = this._onMaskFrameTimer;
-        
-        /*
-        this._imageCanvasElement.width = parseInt(width, 10);
-        this._imageCanvasElement.height = parseInt(height, 10);
-        this._inputImageElement.width = parseInt(width, 10);
-        this._inputImageElement.height = parseInt(height, 10);
-        */
-
 
         this._inputVideoElement.autoplay = true;
         this._inputVideoElement.srcObject = stream;
