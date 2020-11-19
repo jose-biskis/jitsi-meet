@@ -98,19 +98,33 @@ export default class JitsiStreamBlurEffect {
                 let currentFrame = null;
 
                 if(this._display == 'portrait') {
-                    config = {
-                        internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
-                        maxDetections: 1, // max. number of person poses to detect per image
-                        segmentationThreshold: 0.7, // represents probability that a pixel belongs to a person
-                        flipHorizontal: false,
-                        scoreThreshold: 0.2
-                    };
+                    if(window.location.pathname.includes('resnet')) { 
+                        config = {
+                            internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
+                            maxDetections: 1, // max. number of person poses to detect per image
+                            segmentationThreshold: 0.7, // represents probability that a pixel belongs to a person
+                            flipHorizontal: false,
+                            scoreThreshold: 0.2
+                        };
+                    } else {
+                        config = {
+                            internalResolution: 'medium', // resized to 0.5 times of the original resolution before inference
+                            maxDetections: 1, // max. number of person poses to detect per image
+                            segmentationThreshold: 0.7, // represents probability that a pixel belongs to a person
+                            flipHorizontal: false,
+                            scoreThreshold: 0.2
+                        };                    
+                    }
+
+
 
                     if(window.location.pathname.includes("experimentalLandscape")) {
 			            let interceptorHeight = cheight * 0.5;
 			            let interceptorWidth = cwidth * 0.5;
                         let interceptorCanvas = document.createElement('canvas');
                         let interceptorCtx = interceptorCanvas.getContext('2d');
+                        let landscapeCanvas = document.createElement('canvas');
+                        let landscapeCtx = landscapeCanvas.getContext('2d');
     
                         interceptorCtx.drawImage(this._inputVideoElement, 0, 0);
     
@@ -126,18 +140,18 @@ export default class JitsiStreamBlurEffect {
     
                         interceptorCtx.drawImage(this._inputVideoElement, 0, 0, newWidth, interceptorHeight);
                 
-                        this._inputVideoCanvasElement.width = interceptorWidth;
-                        this._inputVideoCanvasElement.height = interceptorHeight;
+                        landscapeCanvas.width = interceptorWidth;
+                        landscapeCanvas.height = interceptorHeight;
     
                         let startAtX = Math.round((interceptorWidth - newWidth) / 2);
     
-                        inputCanvasCtx.drawImage(interceptorCanvas, startAtX, 0);
+                        landscapeCtx.drawImage(interceptorCanvas, startAtX, 0);
                 
-                        currentFrame = inputCanvasCtx.getImageData(
+                        currentFrame = landscapeCtx.getImageData(
                             0,
                             0,
-                            this._inputVideoCanvasElement.width,
-                            this._inputVideoCanvasElement.height
+                            this.landscapeCanvas.width,
+                            this.landscapeCanvas.height
                         );
                     } else {
                         inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
@@ -156,20 +170,30 @@ export default class JitsiStreamBlurEffect {
                     }
 
                 } else {
-                    config = {
-                        internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
-                        maxDetections: 1, // max. number of person poses to detect per image
-                        segmentationThreshold: 0.75, // represents probability that a pixel belongs to a person
-                        flipHorizontal: false,
-                        scoreThreshold: 0.2
-                    };
+                    if(window.location.pathname.includes('resnet')) { 
+                        config = {
+                            internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
+                            maxDetections: 1, // max. number of person poses to detect per image
+                            segmentationThreshold: 0.8, // represents probability that a pixel belongs to a person
+                            flipHorizontal: false,
+                            scoreThreshold: 0.2
+                        };   
+                    } else {
+                        config = {
+                            internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
+                            maxDetections: 1, // max. number of person poses to detect per image
+                            segmentationThreshold: 0.8, // represents probability that a pixel belongs to a person
+                            flipHorizontal: false,
+                            scoreThreshold: 0.2
+                        };                   
+                    }
 
                     inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0);
 
-                    this._inputVideoCanvasElement.width = cwidth * 0.5;
-                    this._inputVideoCanvasElement.height = cheight * 0.5;
+                    this._inputVideoCanvasElement.width = cwidth;
+                    this._inputVideoCanvasElement.height = cheight;
             
-                    inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth * 0.5, cheight * 0.5);
+                    inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, cwidth, cheight);
             
                     currentFrame = inputCanvasCtx.getImageData(
                         0,
@@ -301,18 +325,30 @@ export default class JitsiStreamBlurEffect {
     this._fwidth = width;
 
     if(!this._bpModel) {
-        if(width > height) {
+        let inverted = window.location.pathname.includes('inverted');
+
+        if(inverted || (width > height)) {
             this._display = 'landscape';
-            bpModel = bodyPix.load({
-                architecture: 'MobileNetV1',
-                outputStride: 8,
-                multiplier: 1,
-                quantBytes: 4
-            });
+
+            if(window.location.pathname.includes('resnet')) {
+                bpModel = bodyPix.load({
+                    architecture: 'ResNet50',
+                    outputStride: 16,
+                    multiplier: 1,
+                    quantBytes: 4
+                });
+            } else {
+                bpModel = bodyPix.load({
+                    architecture: 'MobileNetV1',
+                    outputStride: 8,
+                    multiplier: 1,
+                    quantBytes: 4
+                });
+            }
         } else {
             this._display = 'portrait';
 
-            if(window.location.pathname.includes('resnetmobile')) {
+            if(window.location.pathname.includes('resnet')) {
                 bpModel = bodyPix.load({
                     architecture: 'ResNet50',
                     outputStride: 16,
@@ -324,8 +360,7 @@ export default class JitsiStreamBlurEffect {
                     architecture: 'MobileNetV1',
                     outputStride: 8,
                     multiplier: 1,
-                    quantBytes: 4,
-            //modelUrl: 'https://storage.googleapis.com/tfjs-models/savedmodel/mobilenet_v2_1.0_224/model.json'
+                    quantBytes: 4
                 });
             }
         }
@@ -347,8 +382,8 @@ export default class JitsiStreamBlurEffect {
         const cheight = 360;
 
         if((!this._display || this._display == 'landscape')) { 
-            this._outputCanvasElement.width = parseInt(cwidth * 0.5, 10);
-            this._outputCanvasElement.height = parseInt(cheight * 0.5, 10);     
+            this._outputCanvasElement.width = parseInt(cwidth, 10);
+            this._outputCanvasElement.height = parseInt(cheight, 10);
         } else {
             if(window.location.pathname.includes("experimentalLandscape")) {
                 this._outputCanvasElement.width = parseInt(cwidth * 0.5,  10);
