@@ -19,9 +19,11 @@ import * as bodyPix from '@tensorflow-models/body-pix';
  */
 export default class JitsiStreamBlurEffect {
     _bpModel: Object;
+    _isImageReady = false;
     _display: String;
     _fwidth: Number;
     _fheight: Number;
+    _imageToReplaceData: CanvasImageData;
     _inputVideoElement: HTMLVideoElement;
     _inputVideoCanvasElement: HTMLCanvasElement;
     _imageCanvasElement: HTMLCanvasElement;
@@ -52,16 +54,6 @@ export default class JitsiStreamBlurEffect {
         this._inputVideoElement = document.createElement('video');
         this._inputVideoCanvasElement = document.createElement('canvas');
         this._inputImageElement = document.createElement('img');
-
-        fetch('https://admin.ozjitsi.xyz/urlBackground')
-            .then(response => response.json())
-            .then(response => { 
-                this._inputImageElement.crossOrigin = 'Anonymous';
-                this._inputImageElement.src = response.msg; 
-                console.log(this._inputImageElement.src, 'backgroundStartLoading');
-            });
-        
-
         this._imageCanvasElement = document.createElement('canvas');
     }
 
@@ -88,7 +80,7 @@ export default class JitsiStreamBlurEffect {
         const cwidth = 640;
         const cheight = 360;
 
-        if (this._bpModel && this._display && this._inputImageElement.src) {
+        if (this._bpModel && this._display && this._isImageReady && this._imageToReplaceData) {
             const inputCanvasCtx = this._inputVideoCanvasElement.getContext('2d');    
 
             if(!this._maskInProgress) {
@@ -208,37 +200,23 @@ export default class JitsiStreamBlurEffect {
                     this._maskInProgress = false;
     
                     console.log('Is in effect');
-                    //   console.log( currentFrame.data.length, 'Image Data');
+                    
                    if (this._segmentationData) {
-                       const imageToReplaceCtx = this._imageCanvasElement.getContext('2d');
-                       imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0);
-           
-                       this._imageCanvasElement.width = currentFrame.width;
-                       this._imageCanvasElement.height = currentFrame.height;
-           
-                       imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0, currentFrame.width, currentFrame.height);
-           
-                       const imageToReplaceData = imageToReplaceCtx.getImageData(
-                           0,
-                           0,
-                           currentFrame.width,
-                           currentFrame.height
-                       );
-                       var frameWidth = currentFrame.width;
-                       var frameHeight = currentFrame.height;
+                        var frameWidth = currentFrame.width;
+                        var frameHeight = currentFrame.height;
 
-                      var pixel = currentFrame.data;
-                      var pixelLength = pixel.length;
-                      var segmentsLength = pixelLength / frameWidth;
-                      var segmentationData = this._segmentationData.data;
-                      let i = 0;
-                      let from = i * segmentsLength; 
+                        var pixel = currentFrame.data;
+                        var pixelLength = pixel.length;
+                        var segmentsLength = pixelLength / frameWidth;
+                        var segmentationData = this._segmentationData.data;
+                        let i = 0;
+                        let from = i * segmentsLength; 
            
-                      for(i = 0; i < segmentsLength; i++) {
-                          let to =  (from) + segmentsLength;
-                          this.drawSegment(from, to, segmentationData, pixel, imageToReplaceData.data);
-                          from = to;
-                      }
+                        for(i = 0; i < segmentsLength; i++) {
+                            let to =  (from) + segmentsLength;
+                            this.drawSegment(from, to, segmentationData, pixel, this._imageToReplaceData.data);
+                            from = to;
+                        }
                    }
     
                     this._outputCanvasElement.getContext('2d').imageSmoothingEnabled = true;
@@ -312,87 +290,109 @@ export default class JitsiStreamBlurEffect {
      * @returns {MediaStream} - The stream with the applied effect.
      */
     startEffect(stream: MediaStream) {
-    // An output stride of 16 and a multiplier of 0.5 are used for improved
-    // performance on a larger range of CPUs.
+        // An output stride of 16 and a multiplier of 0.5 are used for improved
+        // performance on a larger range of CPUs.
 
-    let bpModel = null;
+        let bpModel = null;
 
-    const firstVideoTrack = stream.getVideoTracks()[0];
-    const { height, width, frameRate }
-    = firstVideoTrack.getSettings ? firstVideoTrack.getSettings() : firstVideoTrack.getConstraints();
-    
-    this._fheight = height;
-    this._fwidth = width;
-
-    if(!this._bpModel) {
-        let inverted = window.location.pathname.includes('inverted');
-
-        if(inverted || (width > height)) {
-            this._display = 'landscape';
-
-            if(window.location.pathname.includes('resnet')) {
-                bpModel = bodyPix.load({
-                    architecture: 'ResNet50',
-                    outputStride: 16,
-                    multiplier: 1,
-                    quantBytes: 4
-                });
-            } else {
-                bpModel = bodyPix.load({
-                    architecture: 'MobileNetV1',
-                    outputStride: 8,
-                    multiplier: 1,
-                    quantBytes: 4
-                });
-            }
-        } else {
-            this._display = 'portrait';
-
-            if(window.location.pathname.includes('resnet')) {
-                bpModel = bodyPix.load({
-                    architecture: 'ResNet50',
-                    outputStride: 16,
-                    multiplier: 1,
-                    quantBytes: 1
-                });
-            } else {
-                bpModel = bodyPix.load({
-                    architecture: 'MobileNetV1',
-                    outputStride: 8,
-                    multiplier: 1,
-                    quantBytes: 4
-                });
-            }
-        }
-
-        bpModel
-        .then(model => {
-            this._bpModel = model;
-        });
-    }
-    
-
-
-
-
-        this._maskFrameTimerWorker = new Worker(timerWorkerScript, { name: 'Blur effect worker' });
-        this._maskFrameTimerWorker.onmessage = this._onMaskFrameTimer;
-            
+        const firstVideoTrack = stream.getVideoTracks()[0];
+        const { height, width, frameRate }
+        = firstVideoTrack.getSettings ? firstVideoTrack.getSettings() : firstVideoTrack.getConstraints();
+        
+        this._fheight = height;
+        this._fwidth = width;
         const cwidth = 640;
         const cheight = 360;
 
-        if((!this._display || this._display == 'landscape')) { 
-            this._outputCanvasElement.width = parseInt(cwidth, 10);
-            this._outputCanvasElement.height = parseInt(cheight, 10);
-        } else {
-            if(window.location.pathname.includes("experimentalLandscape")) {
-                this._outputCanvasElement.width = parseInt(cwidth * 0.5,  10);
-                this._outputCanvasElement.height = parseInt(cheight * 0.5, 10); 
+        if(!this._bpModel) {
+            let inverted = window.location.pathname.includes('inverted');
+
+            if(inverted || (width > height)) {
+                this._display = 'landscape';
+
+                if(window.location.pathname.includes('resnet')) {
+                    bpModel = bodyPix.load({
+                        architecture: 'ResNet50',
+                        outputStride: 16,
+                        multiplier: 1,
+                        quantBytes: 4
+                    });
+                } else {
+                    bpModel = bodyPix.load({
+                        architecture: 'MobileNetV1',
+                        outputStride: 8,
+                        multiplier: 1,
+                        quantBytes: 4
+                    });
+                }
             } else {
-                this._outputCanvasElement.width = parseInt(Math.round(this._fwidth * 0.5), 10);
-                this._outputCanvasElement.height = parseInt(Math.round(this._fheight * 0.5), 10); 
-            }   
+                this._display = 'portrait';
+
+                if(window.location.pathname.includes('resnet')) {
+                    bpModel = bodyPix.load({
+                        architecture: 'ResNet50',
+                        outputStride: 16,
+                        multiplier: 1,
+                        quantBytes: 1
+                    });
+                } else {
+                    bpModel = bodyPix.load({
+                        architecture: 'MobileNetV1',
+                        outputStride: 8,
+                        multiplier: 1,
+                        quantBytes: 4
+                    });
+                }
+            }
+
+            if((!this._display || this._display == 'landscape')) { 
+                this._outputCanvasElement.width = parseInt(cwidth, 10);
+                this._outputCanvasElement.height = parseInt(cheight, 10);
+            } else {
+                if(window.location.pathname.includes("experimentalLandscape")) {
+                    this._outputCanvasElement.width = parseInt(cwidth * 0.5,  10);
+                    this._outputCanvasElement.height = parseInt(cheight * 0.5, 10); 
+                } else {
+                    this._outputCanvasElement.width = parseInt(Math.round(this._fwidth * 0.5), 10);
+                    this._outputCanvasElement.height = parseInt(Math.round(this._fheight * 0.5), 10); 
+                }   
+            }
+
+            fetch('https://admin.ozjitsi.xyz/urlBackground')
+            .then(response => response.json())
+            .then(response => { 
+                this._inputImageElement.crossOrigin = 'Anonymous';
+                this._inputImageElement.src = response.msg; 
+                this._inputImageElement.onload = () => {
+                    const imageToReplaceCtx = this._imageCanvasElement.getContext('2d');
+                    imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0);
+        
+                    this._imageCanvasElement.width = this._outputCanvasElement.width;
+                    this._imageCanvasElement.height = this._outputCanvasElement.height;
+        
+                    imageToReplaceCtx.drawImage(this._inputImageElement, 0, 0, this._outputCanvasElement.width, this._outputCanvasElement.height);
+        
+                    this._imageToReplaceData = imageToReplaceCtx.getImageData(
+                        0,
+                        0,
+                        this._outputCanvasElement.width,
+                        this._outputCanvasElement.height
+                    );
+                    this._isImageReady = true;
+                }
+
+                console.log(this._inputImageElement.src, 'backgroundStartLoading');
+            });
+
+            bpModel
+            .then(model => {
+                this._bpModel = model;
+            });
         }
+        
+        this._maskFrameTimerWorker = new Worker(timerWorkerScript, { name: 'Blur effect worker' });
+        this._maskFrameTimerWorker.onmessage = this._onMaskFrameTimer;
+            
     
         this._inputVideoCanvasElement.width = parseInt(Math.round(this._fwidth), 10);
         this._inputVideoCanvasElement.height = parseInt(Math.round(this._fheight), 10);
