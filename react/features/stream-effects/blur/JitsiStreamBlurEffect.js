@@ -100,13 +100,15 @@ export default class JitsiStreamBlurEffect {
 
                 this._maskInProgress = true;
                 let currentFrame = null;
+                let canvasElement = null;
 
                 if(this._display == 'portrait') {
                     if(window.location.pathname.includes("experimentalLandscape")) {
                         this._interceptorCtx.drawImage(this._inputVideoElement, 0, 0, this._interceptorCanvas.width, this._interceptorCanvas.height);
                 
                         this._landscapeCtx.drawImage(this._interceptorCanvas, this._startAtX, 0);
-                
+                        canvasElement = this._landscapeCanvas;
+      
                         currentFrame = this._landscapeCtx.getImageData(
                             0,
                             0,
@@ -115,7 +117,7 @@ export default class JitsiStreamBlurEffect {
                         );
                     } else {                
                         this._inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, this._outputCanvasElement.width, this._outputCanvasElement.height);
-                
+                        canvasElement = this._inputVideoCanvasElement;
                         currentFrame = this._inputCanvasCtx.getImageData(
                             0,
                             0,
@@ -126,7 +128,7 @@ export default class JitsiStreamBlurEffect {
 
                 } else {
                     this._inputCanvasCtx.drawImage(this._inputVideoElement, 0, 0, this._outputCanvasElement.width, this._outputCanvasElement.height);
-            
+                    canvasElement = this._inputVideoCanvasElement;
                     currentFrame = this._inputCanvasCtx.getImageData(
                         0,
                         0,
@@ -135,7 +137,7 @@ export default class JitsiStreamBlurEffect {
                     );
                 }
     
-                this._bpModel.segmentPerson(this._inputVideoCanvasElement, this._modelConfig).then(data => {
+                this._bpModel.segmentPerson(canvasElement, this._modelConfig).then(data => {
                     this._segmentationData = data;
                     this._maskInProgress = false;
     
@@ -248,7 +250,7 @@ export default class JitsiStreamBlurEffect {
         if(!this._bpModel) {
             let inverted = window.location.pathname.includes('inverted');
 
-            if(inverted || (width > height)) {  
+            if((width > height) && !inverted) {  
                 if(window.location.pathname.includes('resnet')) { 
                     this._modelConfig = {
                         internalResolution: 'full', // resized to 0.5 times of the original resolution before inference
@@ -357,11 +359,11 @@ export default class JitsiStreamBlurEffect {
                 this._inputVideoCanvasElement.height = this._outputCanvasElement.height;
             } else {
                 if(window.location.pathname.includes("experimentalLandscape")) {
-                    this._outputCanvasElement.width = parseInt(cwidth * 0.5,  10);
-                    this._outputCanvasElement.height = parseInt(cheight * 0.5, 10); 
+                    this._outputCanvasElement.width = parseInt(cwidth,  10);
+                    this._outputCanvasElement.height = parseInt(cheight, 10); 
                 } else {
-                    this._outputCanvasElement.width = parseInt((this._fwidth * 0.5) << 0, 10);
-                    this._outputCanvasElement.height = parseInt((this._fheight * 0.5) << 0, 10); 
+                    this._outputCanvasElement.width = parseInt((this._fwidth) << 0, 10);
+                    this._outputCanvasElement.height = parseInt((this._fheight) << 0, 10); 
 
                     this._inputVideoCanvasElement.width = this._outputCanvasElement.width;
                     this._inputVideoCanvasElement.height = this._outputCanvasElement.height;
